@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import ContentstackAppSdk from '@contentstack/app-sdk'
 
-const FIELD_AUDIENCE = 'audience'
+const FIELD_AUDIENCE = 'sdp_article_audience'
 const sdp_audience = 'sdp_audience';
 const FIELD_URL = 'url'
 const ERROR_MESSAGE = 'This extension can only be used inside Contentstack'
@@ -27,7 +27,7 @@ function App() {
     else if (category === 'Resolvers') {
       formattedCategory = `https://supportcenter.corp.google.com/corpengkb/article/${id}`
     }
-
+    id = ':unique_id'
     return `${formattedCategory}`
   }
   const initializeApp = useCallback(async () => {
@@ -38,6 +38,15 @@ function App() {
       // Update the height of the App Section
       customField?.frame?.updateHeight(24)
       entry?.onChange((data: any) => {
+        // Construct the URL
+        var article_id = entry._data.uid;
+        const url = constructUrl(data, article_id)
+        setUrl(url)
+        // Update the URL to the URL Field
+        // This will be used for Live Preview
+        entry.getField(FIELD_URL, { useUnsavedSchema: true })?.setData(url)
+      })
+      entry?.onSave((data: any) => {
         // Construct the URL
         var article_id = entry._data.uid;
         const url = constructUrl(data, article_id)
@@ -60,7 +69,7 @@ function App() {
     }
   }, [initializeApp])
 
-  return error ? <h3>{error}</h3> : <div style={contentStyle}>{url}</div>
+  return error ? <h3>{error}</h3> : <div style={contentStyle}><a href = {url} target = "_blank">{url}</a></div>
 }
 
 export default App
