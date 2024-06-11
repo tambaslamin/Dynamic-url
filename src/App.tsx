@@ -33,7 +33,7 @@ function App() {
   const initializeApp = useCallback(async () => {
     if (app) {
       const customField = await app?.location?.CustomField
-      const entry = customField?.entry
+      const entry = await customField?.entry
       console.log(entry)
       // Update the height of the App Section
       customField?.frame?.updateHeight(24)
@@ -69,7 +69,7 @@ function App() {
     }
   }, [initializeApp])
 
-  return error ? <h3>{error}</h3> : <div style={contentStyle}><a href = {url} target = "_blank">{url}</a></div>
+  return error ? <h3>{error}</h3> : <div style={contentStyle}><a href={url} target ="_blank">{url}</a></div>
 }
 
 export default App
