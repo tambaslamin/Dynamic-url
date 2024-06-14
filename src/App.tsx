@@ -21,6 +21,9 @@ function App() {
   const constructUrl = (data: any, id: any) => {
     const category = data?.[FIELD_AUDIENCE][sdp_audience]
     let formattedCategory = ''
+    if (typeof id === 'undefined') {
+      id = 'entry_id'
+    }
     if (category === 'Googlers') {
       formattedCategory = `https://supportcenter.corp.google.com/techstop/article/${id}`
     }
@@ -33,26 +36,32 @@ function App() {
   const initializeApp = useCallback(async () => {
     if (app) {
       const customField = await app?.location?.CustomField
-      const entry = await customField?.entry
+      const entry = customField?.entry
       console.log(entry)
       // Update the height of the App Section
-      customField?.frame?.updateHeight(24)
-      entry?.onChange((data: any) => {
-        // Construct the URL
+      customField?.frame?.enableAutoResizing()
+
+      // On load, set dynamic URL if audience field is set.
+      if (entry?._data?.[FIELD_AUDIENCE]) {
         var article_id = entry._data.uid;
-        const url = constructUrl(data, article_id)
+        const url = constructUrl(entry._data, article_id)
         setUrl(url)
         // Update the URL to the URL Field
         // This will be used for Live Preview
         entry.getField(FIELD_URL, { useUnsavedSchema: true })?.setData(url)
-      })
-      entry?.onSave((data: any) => {
-        // Construct the URL
+      }
+      customField?.frame?.enableAutoResizing()
+      entry?.onChange((data: any) => {
         var article_id = entry._data.uid;
         const url = constructUrl(data, article_id)
         setUrl(url)
-        // Update the URL to the URL Field
-        // This will be used for Live Preview
+        entry.getField(FIELD_URL, { useUnsavedSchema: true })?.setData(url)
+      })
+
+      entry?.onSave((data: any) => {
+        var article_id = entry._data.uid;
+        const url = constructUrl(data, article_id)
+        setUrl(url)
         entry.getField(FIELD_URL, { useUnsavedSchema: true })?.setData(url)
       })
     }
@@ -69,7 +78,7 @@ function App() {
     }
   }, [initializeApp])
 
-  return error ? <h3>{error}</h3> : <div style={contentStyle}><a href={url} target ="_blank">{url}</a></div>
+  return error ? <h3>{error}</h3> : <div style={contentStyle}><a href = {url} target = "_blank">{url}</a></div>
 }
 
 export default App
