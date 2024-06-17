@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import ContentstackAppSdk from '@contentstack/app-sdk'
 
 const FIELD_AUDIENCE = 'sdp_article_audience'
-const sdp_audience = 'sdp_audience';
+const SDP_AUDIENCE = 'sdp_audience';
 const FIELD_URL = 'url'
 const ERROR_MESSAGE = 'This extension can only be used inside Contentstack'
 
@@ -12,35 +12,17 @@ const contentStyle = {
   fontWeight: 'bold',
   color: '#6b5ce7',
 }
-
 function App() {
   const [error, setError] = useState<any>(null)
   const [app, setApp] = useState({} as any)
   const [url, setUrl] = useState('')
 
-  const constructUrl = (data: any, id: any) => {
-    const category = data?.[FIELD_AUDIENCE][sdp_audience]
-    let formattedCategory = ''
-    if (typeof id === 'undefined') {
-      id = 'entry_id'
-    }
-    if (category === 'Googlers') {
-      formattedCategory = `https://supportcenter.corp.google.com/techstop/article/${id}`
-    }
-    else if (category === 'Resolvers') {
-      formattedCategory = `https://supportcenter.corp.google.com/corpengkb/article/${id}`
-    }
-    id = ':unique_id'
-    return `${formattedCategory}`
-  }
   const initializeApp = useCallback(async () => {
     if (app) {
       const customField = await app?.location?.CustomField
       const entry = customField?.entry
-      console.log(entry)
       // Update the height of the App Section
       customField?.frame?.enableAutoResizing()
-
       // On load, set dynamic URL if audience field is set.
       if (entry?._data?.[FIELD_AUDIENCE]) {
         var article_id = entry._data.uid;
@@ -66,6 +48,22 @@ function App() {
       })
     }
   }, [app])
+  
+  const constructUrl = (data: any, id: any) => {
+    const category = data?.[FIELD_AUDIENCE][SDP_AUDIENCE]
+    let formattedCategory = ''
+    if (typeof id === 'undefined') {
+      id = 'entry_id'
+    }
+    if (category === 'Googlers') {
+      formattedCategory = `/techstop/article/${id}`
+    }
+    else if (category === 'Resolvers') {
+      formattedCategory = `/corpengkb/article/${id}`
+    }
+    id = ':unique_id'
+    return `${formattedCategory}`
+  }
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.self === window.top) {
