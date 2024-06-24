@@ -76,7 +76,7 @@ function App() {
     }
   }, [initializeApp])
 
-  return error ? <h3>{error}</h3> : <div style={contentStyle}><a href = {url} target = "_blank">{url}</a></div>
+  return error ? <h3>{error}</h3> : <div style={contentStyle}><base href="https://supportcenter.corp.google.com"/><a href = {url} target = "_blank">{url}</a></div>
 }
 
 export default App
