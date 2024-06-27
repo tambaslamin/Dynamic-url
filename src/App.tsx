@@ -23,28 +23,33 @@ function App() {
       const entry = customField?.entry
       // Update the height of the App Section
       customField?.frame?.enableAutoResizing()
+      let url = customField?.entry.getData().url;
+      const newSlug = `${url}?origin=gcp&preview=x`
+      console.log("newslug" + newSlug)
+      console.log(entry.getField("url"));
+      entry.getField(FIELD_URL, { useUnsavedSchema: true })?.setData(newSlug)
+      //customField?.entry.getField("url")?.setData(newSlug)
+      console.log(customField?.entry.getData().url);
       // On load, set dynamic URL if audience field is set.
-      if (entry?._data?.[FIELD_AUDIENCE]) {
-        var article_id = entry._data.uid;
-        const url = constructUrl(entry._data, article_id)
-        setUrl(url)
-        // Update the URL to the URL Field
-        // This will be used for Live Preview
-        entry.getField(FIELD_URL, { useUnsavedSchema: true })?.setData(url)
-      }
-      customField?.frame?.enableAutoResizing()
       entry?.onChange((data: any) => {
         var article_id = entry._data.uid;
         const url = constructUrl(data, article_id)
         setUrl(url)
         entry.getField(FIELD_URL, { useUnsavedSchema: true })?.setData(url)
       })
-
       entry?.onSave((data: any) => {
         var article_id = entry._data.uid;
-        const url = constructUrl(data, article_id)
-        setUrl(url)
-        entry.getField(FIELD_URL, { useUnsavedSchema: true })?.setData(url)
+        let parsedUrl = customField?.entry.getData().url.replace(/\?.*$/, "");
+        let entryCustomField = customField?.entry
+        entryCustomField.getField("url")?.setData(newSlug)
+        entry.url = parsedUrl;
+        let payload = {
+          entry
+        };
+        customField?.ContentType(entryCustomField.content_type.uid).Entry(entry.uid).update(payload).then().catch();
+        //const url = constructUrl(data, article_id)
+        //setUrl(url)
+        customField?.entry.getField("url")?.setData(newSlug)
       })
     }
   }, [app])
