@@ -22,6 +22,7 @@ function App() {
     if (app) {
       const customField = await app?.location?.CustomField
       const entry = customField?.entry
+
       // Update the height of the App Section
       customField?.frame?.enableAutoResizing()
       // Define "GET" parameters that should be appended to the URL for live preview.
