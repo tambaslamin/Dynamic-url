@@ -4,7 +4,7 @@ import ContentstackAppSdk from '@contentstack/app-sdk'
 const FIELD_AUDIENCE = 'sdp_article_audience'
 const SDP_AUDIENCE = 'sdp_audience';
 const FIELD_URL = 'url'
-const ERROR_MESSAGE = 'This extension can only be used inside Contentstack'
+const ERROR_MESSAGE = 'This extension can only be used inside Contentstack.'
 
 const contentStyle = {
   fontFamily: 'Arial, sans-serif',
@@ -12,6 +12,7 @@ const contentStyle = {
   fontWeight: 'bold',
   color: '#6b5ce7',
 }
+
 function App() {
   const [error, setError] = useState<any>(null)
   const [app, setApp] = useState({} as any)
@@ -23,33 +24,56 @@ function App() {
       const entry = customField?.entry
       // Update the height of the App Section
       customField?.frame?.enableAutoResizing()
-      let url = customField?.entry.getData().url;
-      const newSlug = `${url}?origin=gcp&preview=x`
-      console.log("newslug" + newSlug)
-      console.log(entry.getField("url"));
-      entry.getField(FIELD_URL, { useUnsavedSchema: true })?.setData(newSlug)
-      //customField?.entry.getField("url")?.setData(newSlug)
-      console.log(customField?.entry.getData().url);
-      // On load, set dynamic URL if audience field is set.
+      // Define "GET" parameters that should be appended to the URL for live preview.
+      const appendToUrl = `?origin=gcp&preview=x`
+      if (entry?._data?.[FIELD_AUDIENCE]) {
+        let cleanUrl = customField?.entry.getData().url.replace(/\?.*$/, "");
+        // Set the URL field to be the "cleanUrl" value.
+        let entryCustomField = customField?.entry
+        entryCustomField.getField("url")?.setData(cleanUrl)
+
+        // Retrieve then modify the entry object.
+        let entry = entryCustomField.getData();
+        entry.url = cleanUrl;
+        let payload = {
+          entry
+        };
+
+        // Perform the entry update (using the new payload).
+        await app.stack.ContentType(entryCustomField.content_type.uid).Entry(entry.uid).update(payload).then().catch();
+
+        // After first save complete, re-add the live preview parameters to the URL field.
+        customField?.entry.getField("url")?.setData(url)
+      }
+      // On load, set the dynamic URL if audience field is set.
       entry?.onChange((data: any) => {
         var article_id = entry._data.uid;
         const url = constructUrl(data, article_id)
         setUrl(url)
-        entry.getField(FIELD_URL, { useUnsavedSchema: true })?.setData(url)
+        entry.getField(FIELD_URL, { useUnsavedSchema: true })?.setData(url + appendToUrl)
       })
-      entry?.onSave((data: any) => {
-        var article_id = entry._data.uid;
-        let parsedUrl = customField?.entry.getData().url.replace(/\?.*$/, "");
+
+      // On save, commit the URL without "appendToUrl".
+      entry?.onSave(async (data: any) => {
+        // This regex will remove all "GET" parameters (i.e., ?param1=abc&param2=abc).
+        let cleanUrl = customField?.entry.getData().url.replace(/\?.*$/, "");
+
+        // Set the URL field to be the "cleanUrl" value.
         let entryCustomField = customField?.entry
-        entryCustomField.getField("url")?.setData(newSlug)
-        entry.url = parsedUrl;
+        entryCustomField.getField("url")?.setData(cleanUrl)
+
+        // Retrieve then modify the entry object.
+        let entry = entryCustomField.getData();
+        entry.url = cleanUrl;
         let payload = {
           entry
         };
-        customField?.ContentType(entryCustomField.content_type.uid).Entry(entry.uid).update(payload).then().catch();
-        //const url = constructUrl(data, article_id)
-        //setUrl(url)
-        customField?.entry.getField("url")?.setData(newSlug)
+
+        // Perform the entry update (using the new payload).
+        await app.stack.ContentType(entryCustomField.content_type.uid).Entry(entry.uid).update(payload).then().catch();
+
+        // After save complete, re-add the live preview parameters to the URL field.
+        customField?.entry.getField("url")?.setData(url)
       })
     }
   }, [app])
@@ -81,7 +105,12 @@ function App() {
     }
   }, [initializeApp])
 
-  return error ? <h3>{error}</h3> : <div style={contentStyle}><base href="https://supportcenter.corp.google.com"/><a href = {url} target = "_blank">{url}</a></div>
+  return error 
+    ? <h3>{error}</h3> 
+    : <div style={contentStyle}>
+        <base href="https://supportcenter.corp.google.com"/>
+          <a href={url} target="_blank">{url}</a>
+      </div>
 }
 
 export default App
