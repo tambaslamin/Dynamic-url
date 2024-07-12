@@ -22,17 +22,22 @@ function App() {
     if (app) {
       const customField = await app?.location?.CustomField
       const entry = customField?.entry
-
+      const branch_details = app.stack.getCurrentBranch()
+      const branch = branch_details.uid
+      const content_type = entry.content_type.uid
+      let appendToUrl = ''
       // Update the height of the App Section
       customField?.frame?.enableAutoResizing()
       // Define "GET" parameters that should be appended to the URL for live preview.
-      const appendToUrl = `?origin=gcp&preview=x`
+      if (content_type === 'sdp_knowledge_article') {
+         appendToUrl = `?origin=gcp-na-app.contentstack.com&branch=${branch}`
+      }
+      
       if (entry?._data?.[FIELD_AUDIENCE]) {
         let cleanUrl = customField?.entry.getData().url.replace(/\?.*$/, "");
         // Set the URL field to be the "cleanUrl" value.
         let entryCustomField = customField?.entry
         entryCustomField.getField("url")?.setData(cleanUrl)
-
         // Retrieve then modify the entry object.
         let entry = entryCustomField.getData();
         entry.url = cleanUrl;
@@ -58,7 +63,6 @@ function App() {
       entry?.onSave(async (data: any) => {
         // This regex will remove all "GET" parameters (i.e., ?param1=abc&param2=abc).
         let cleanUrl = customField?.entry.getData().url.replace(/\?.*$/, "");
-
         // Set the URL field to be the "cleanUrl" value.
         let entryCustomField = customField?.entry
         entryCustomField.getField("url")?.setData(cleanUrl)
@@ -110,7 +114,7 @@ function App() {
     ? <h3>{error}</h3> 
     : <div style={contentStyle}>
         <base href="https://supportcenter.corp.google.com"/>
-          <a href={url} target="_blank">{url}</a>
+          <a href={url} target="_blank"  rel="noopener noreferrer">{url}</a>
       </div>
 }
 
