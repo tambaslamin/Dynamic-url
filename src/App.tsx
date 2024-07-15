@@ -24,14 +24,10 @@ function App() {
       const entry = customField?.entry
       const branch_details = app.stack.getCurrentBranch()
       const branch = branch_details.uid
-      const content_type = entry.content_type.uid
-      let appendToUrl = ''
       // Update the height of the App Section
       customField?.frame?.enableAutoResizing()
       // Define "GET" parameters that should be appended to the URL for live preview.
-      if (content_type === 'sdp_knowledge_article') {
-         appendToUrl = `?origin=gcp-na-app.contentstack.com&branch=${branch}`
-      }
+      const appendToUrl = `?origin=gcp-na-app.contentstack.com&branch=${branch}`
       
       if (entry?._data?.[FIELD_AUDIENCE]) {
         let cleanUrl = customField?.entry.getData().url.replace(/\?.*$/, "");
