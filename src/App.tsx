@@ -22,8 +22,7 @@ function App() {
     if (app) {
       const customField = await app?.location?.CustomField
       const entry = customField?.entry
-      const branch_details = app.stack.getCurrentBranch()
-      const branch = branch_details.uid
+      const branch = (typeof app.stack === 'undefined' || app.stack === null)? "main": app.stack.getCurrentBranch().uid
       // Update the height of the App Section
       customField?.frame?.enableAutoResizing()
       // Define "GET" parameters that should be appended to the URL for live preview.
@@ -99,12 +98,24 @@ function App() {
     if (typeof window !== 'undefined' && window.self === window.top) {
       setError(ERROR_MESSAGE)
     } else {
-      ContentstackAppSdk.init().then((appSdk) => {
-        setApp(appSdk)
-        initializeApp()
-      })
+      ContentstackAppSdk.init()
+        .then((appSdk) => {
+          setApp(appSdk);
+        })
+        .catch((err) => {
+          console.error("Error initializing SDK: " , err);
+        });
     }
-  }, [initializeApp])
+  }, []);
+
+  useEffect(() => {
+    if (app) {
+      initializeApp();
+    }
+  }, [app])
+
+
+
 
   return error 
     ? <h3>{error}</h3> 
