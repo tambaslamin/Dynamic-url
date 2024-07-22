@@ -1,4 +1,4 @@
-# Dynamic URL Generation using Custom Field
+# Dynamic URL Generation using Custom Field for Category and Taxonomy content types
 
 **This repo services the Knowledge Article content type (not categories and taxonomy content types)**
 
