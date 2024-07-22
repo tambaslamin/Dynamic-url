@@ -1,6 +1,6 @@
 # Dynamic URL Generation using Custom Field
 
-**This repo services category content types (not Knowledge Articles)**
+**This repo services the Knowledge Article content type (not categories and taxonomy content types)**
 
 Contentstack's AppSDK and Contentstack's Venus Component Library is used to create a custom field.
 
