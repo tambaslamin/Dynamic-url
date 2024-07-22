@@ -41,7 +41,7 @@ function App() {
         };
 
         // Perform the entry update (using the new payload).
-        await app.stack.ContentType(entryCustomField.content_type.uid).Entry(entry.uid).update(payload).then().catch();
+        // await app.stack.ContentType(entryCustomField.content_type.uid).Entry(entry.uid).update(payload).then().catch();
 
         // After first save complete, re-add the live preview parameters to the URL field.
         customField?.entry.getField("url")?.setData(url)
