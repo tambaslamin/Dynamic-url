@@ -120,7 +120,7 @@ function App() {
   return error 
     ? <h3>{error}</h3> 
     : <div style={contentStyle}>
-        <base href="https://supportcenter.corp.google.com"/>
+        <base href="https://supportcenter-staging.corp.google.com"/>
           <a href={url} target="_blank"  rel="noopener noreferrer">{url}</a>
       </div>
 }
