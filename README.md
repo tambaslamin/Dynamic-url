@@ -1,5 +1,7 @@
 # Dynamic URL Generation using Custom Field
 
+Categories
+
 Contentstack's AppSDK and Contentstack's Venus Component Library is used to create a custom field.
 
 Here are the documentations that will help you get started.
