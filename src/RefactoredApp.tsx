@@ -45,29 +45,19 @@ function App() {
   const [app, setApp] = useState({} as any);
   const [isSaved, setIsSaved] = useState(true);
   const [url, setUrl] = useState('');
-  const [entryUid, setEntryUid] = useState('');
   const [branchName, setBranch] = useState('');
 
 
   const initializeApp = useCallback(async () => {
     if (!app) return;
     const customField = await app?.location?.CustomField;
-
-    if (customField) {
-      customField?.frame?.updateHeight();
-      customField?.frame?.enableAutoResizing();
-      
-      // Get the entry.
-      const entry = customField?.entry;
-      setEntryUid(entry?._data?.uid)
-    }
-
     if (customField && isSaved) {
       const entry = customField?.entry;
-      console.log("🚀 initializeApp ~ entry:", entry?._data?.url)
+      console.log("🚀 ~ initializeApp ~ entry:", entry?._data?.url)
 
       const branch = app?.stack?.getCurrentBranch()?.uid ?? 'main';
       setBranch(branch);
+      customField?.frame?.enableAutoResizing();
       const appendToUrl = `?origin=gcp-na-app.contentstack.com&branch=${branch}`;
 
       if (entry?._data?.[FIELD_AUDIENCE]) {
@@ -78,11 +68,14 @@ function App() {
       }
 
       entry?.onChange((data: any) => {
-        if (entryUid) {
-          const url = constructUrl(data, entryUid)
+        const articleId = entry?._data?.uid;
+        if (articleId) {
+          const url = constructUrl(data, articleId)
           if (url !== '') {
             setUrl(url)
             entry.getField(FIELD_URL)?.setData(url + appendToUrl)
+          } else {
+            console.error('Not able to Create Url')
           }
         }
       });
@@ -127,22 +120,13 @@ function App() {
   useEffect(() => {
     initializeApp()
   }, [initializeApp])
-  
-  const kms_url_not_available_message = (entryUid)
-    ? 'Select value for "Audience" field to view KMS link.'
-    : 'Select value for "Audience" field and then save entry to view KMS link.'
-  const return_value = (url)
-    ? <div style={contentStyle}>
-        <base href={getHrefUrl(branchName)} />
-        <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
-      </div>
 
-    : <div style={contentStyle}>
-        <p>{kms_url_not_available_message}</p>
-      </div>
   return error
     ? <h3>{error}</h3>
-    : return_value
+    : <div style={contentStyle}>
+      <base href={getHrefUrl(branchName)} />
+      <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
+    </div>
 }
 
 export default App
