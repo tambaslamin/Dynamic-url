@@ -61,19 +61,19 @@ function App() {
     if (customField) {
       customField?.frame?.updateHeight();
       customField?.frame?.enableAutoResizing();
-      
-      // Get the entry.
+
       const entry = customField?.entry;
-      setEntryUid(entry?._data?.uid)
+      console.log("🚀 Entry URL:", entry?._data?.url)
 
-    }
-
-    if (customField && isSaved) {
-      const entry = customField?.entry;
-      console.log("🚀 initializeApp ~ entry:", entry?._data?.url)
-
+      // Set the branch.
       const branch = app?.stack?.getCurrentBranch()?.uid ?? 'main';
       setBranch(branch);
+
+      // Set the entry uid.
+      if (entry?._data?.uid) {
+        setEntryUid(entry?._data?.uid);
+      }
+
       const appendToUrl = `?origin=gcp-na-app.contentstack.com&branch=${branch}`;
 
       if (entry?._data?.[FIELD_AUDIENCE]) {
@@ -86,7 +86,6 @@ function App() {
       entry?.onChange((data: any) => {
         if (entryUid) {
           const url = constructUrl(data, entry?._data?.uid)
-          console.log("Url value is:", url)
           if (url !== '') {
             setUrl(url)
             entry.getField(FIELD_URL)?.setData(url + appendToUrl)
@@ -111,7 +110,7 @@ function App() {
         }
       })
     } else {
-      console.error('error while loading custom-field.')
+      console.log('Custom field not loaded...')
     }
   }, [app, isSaved, entryUid])
 
