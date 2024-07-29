@@ -97,7 +97,8 @@ function App() {
       
       // Set the URL field anytime the audience field changes.
       entry?.onChange((data: any) => {
-        if (entryUid) {
+        console.log("🚀Entry changed, uid is: ", entry?._data?.uid)
+        if (entry?._data?.uid) {
           const url = constructUrl(data, entry?._data?.uid);
           if (url !== '') {
             setUrl(url)
