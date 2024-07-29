@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import ContentstackAppSdk from '@contentstack/app-sdk'
 
-
 const FIELD_AUDIENCE = 'sdp_article_audience'
 const SDP_AUDIENCE = 'sdp_audience';
 const FIELD_URL = 'url'
@@ -27,7 +26,6 @@ const getHrefUrl = (branch: string) => {
 
 const getClearUrl = (url: string) => url.replace(/\?.*$/, "");
 
-
 const constructUrl = (data: any, id: any) => {
   const category = data?.[FIELD_AUDIENCE]?.[SDP_AUDIENCE]
   let formattedCategory = ''
@@ -48,7 +46,6 @@ function App() {
   const [entryUid, setEntryUid] = useState('');
   const [branchName, setBranch] = useState('');
 
-
   const initializeApp = useCallback(async () => {
     
     if (!app) {
@@ -63,7 +60,9 @@ function App() {
       customField?.frame?.enableAutoResizing();
 
       const entry = customField?.entry;
-      console.log("🚀 Entry URL:", entry?._data?.url)
+      if (entry?._data?.url !== 'undefined') {
+        console.log("🚀 Entry URL:", entry?._data?.url);
+      }
 
       // Set the branch.
       const branch = app?.stack?.getCurrentBranch()?.uid ?? 'main';
@@ -75,17 +74,19 @@ function App() {
       }
 
       const appendToUrl = `?origin=gcp-na-app.contentstack.com&branch=${branch}`;
-
+      
+      // When loading entry, if audience field is set, set the...
       if (entry?._data?.[FIELD_AUDIENCE]) {
         if (customField?.entry?.getData?.()?.url !== '') {
           const clearUrl = getClearUrl(customField?.entry?.getData?.()?.url);
           customField?.entry.getField("url", { useUnsavedSchema: true })?.setData(clearUrl + appendToUrl);
         }
       }
-
+      
+      // Set the URL field anytime the audience field changes.
       entry?.onChange((data: any) => {
         if (entryUid) {
-          const url = constructUrl(data, entry?._data?.uid)
+          const url = constructUrl(data, entry?._data?.uid);
           if (url !== '') {
             setUrl(url)
             entry.getField(FIELD_URL)?.setData(url + appendToUrl)
@@ -110,7 +111,7 @@ function App() {
         }
       })
     } else {
-      console.log('Custom field not loaded...')
+      console.log('Custom field not yet loaded...')
     }
   }, [app, isSaved, entryUid])
 
