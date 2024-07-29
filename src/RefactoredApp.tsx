@@ -28,7 +28,10 @@ const getClearUrl = (url: string) => url.replace(/\?.*$/, "");
 
 const constructUrl = (data: any, id: any) => {
   const category = data?.[FIELD_AUDIENCE]?.[SDP_AUDIENCE]
-  let formattedCategory = ''
+ 
+  // Default URL.
+  let formattedCategory = `/article/${id ?? 'entry_id'}`
+
   if (category === 'Googlers') {
     formattedCategory = `/techstop/article/${id ?? 'entry_id'}`
   } else if (category === 'Resolvers') {
@@ -74,6 +77,8 @@ function App() {
       }
 
       const appendToUrl = `?origin=gcp-na-app.contentstack.com&branch=${branch}`;
+
+      // Set the value.
       customField?.entry.getField("url")?.setData(entry._data.url + appendToUrl)
       
       // When loading entry, if audience field is set, set the...
