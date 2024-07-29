@@ -30,14 +30,17 @@ const constructUrl = (data: any, id: any) => {
   const category = data?.[FIELD_AUDIENCE]?.[SDP_AUDIENCE]
  
   // Default URL.
-  let formattedCategory = `/article/${id ?? 'entry_id'}`
+  let formattedUrl = `/article/${id ?? 'entry_id'}`
 
   if (category === 'Googlers') {
-    formattedCategory = `/techstop/article/${id ?? 'entry_id'}`
+    formattedUrl = `/techstop/article/${id ?? 'entry_id'}`
   } else if (category === 'Resolvers') {
-    formattedCategory = `/corpengkb/article/${id ?? 'entry_id'}`
+    formattedUrl = `/corpengkb/article/${id ?? 'entry_id'}`
   }
-  return formattedCategory;
+
+  console.log("🚀 Constructed the URL: ", formattedUrl)
+
+  return formattedUrl;
 }
 
 
@@ -77,9 +80,12 @@ function App() {
       }
 
       const appendToUrl = `?origin=gcp-na-app.contentstack.com&branch=${branch}`;
-
-      // Set the value.
-      customField?.entry.getField("url")?.setData(entry._data.url + appendToUrl)
+      if (entry?._data?.url) {
+        console.log("🚀 Setting the value of the URL field to: ", entry._data.url + appendToUrl)
+        customField?.entry.getField("url")?.setData(entry._data.url + appendToUrl)
+      } else {
+        console.log("🚀 URL is not defined. Cannot set as part of initializeApp.")
+      }
       
       // When loading entry, if audience field is set, set the...
       if (entry?._data?.[FIELD_AUDIENCE]) {
@@ -96,6 +102,8 @@ function App() {
           if (url !== '') {
             setUrl(url)
             entry.getField(FIELD_URL)?.setData(url + appendToUrl)
+          } else {
+            console.log("🚀Entry changed, but URL is empty. Can not set value of URL field when empty.")
           }
         }
       });
