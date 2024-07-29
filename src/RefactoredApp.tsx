@@ -74,6 +74,7 @@ function App() {
       }
 
       const appendToUrl = `?origin=gcp-na-app.contentstack.com&branch=${branch}`;
+      customField?.entry.getField("url")?.setData(entry._data.url + appendToUrl)
       
       // When loading entry, if audience field is set, set the...
       if (entry?._data?.[FIELD_AUDIENCE]) {
