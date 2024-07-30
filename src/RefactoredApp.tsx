@@ -38,8 +38,7 @@ const constructUrl = (data: any, id: any) => {
     formattedUrl = `/corpengkb/article/${id ?? 'entry_id'}`
   }
 
-  console.log("🚀 Constructed the URL: ", formattedUrl)
-
+  console.log("🚀 Constructed the URL:", formattedUrl)
   return formattedUrl;
 }
 
@@ -51,6 +50,51 @@ function App() {
   const [url, setUrl] = useState('');
   const [entryUid, setEntryUid] = useState('');
   const [branchName, setBranch] = useState('');
+  const [audience, setAudience] = useState('');
+
+  const setEntryUidAndLog = (entry: any) => {
+    setEntryUid(entry?._data?.uid);
+    console.log("🚀 Entry UID:", entry?._data?.uid);
+  }
+
+  const setUrlAndLog = (entry: any, appendToUrl: string, changeData: any | null) => {
+    let url = ''
+    if (changeData !== null) {
+      // Entry changed.
+      console.log("🚀 setUrlAndLog - entry changed");
+      url = constructUrl(changeData, entry?._data?.uid);
+      setUrl(url)
+    } else {
+      // Entry not changed.
+      console.log("🚀 setUrlAndLog - entry NOT changed");
+      url = constructUrl(entry, entry?._data?.uid);
+      setUrl(url)
+    }
+
+    if (url !== '') {
+      console.log("🚀 Proposed entry URL:", url);
+    }
+    return url;
+  }
+
+  const setAudienceAndLog = (entry: any, eventType: string) => {
+    let audience = null;
+    if (eventType === "entryChanged") {
+      if (entry?._changedData?.[FIELD_AUDIENCE] && entry?._changedData?.[FIELD_AUDIENCE]?.['sdp_audience'] !== undefined) {
+        audience = entry?._changedData?.[FIELD_AUDIENCE]?.['sdp_audience'];
+        setAudience(audience);
+      }
+    } 
+    else {
+      if (entry?._data?.[FIELD_AUDIENCE] && entry?._data?.[FIELD_AUDIENCE]?.['sdp_audience'] !== undefined) {
+        audience = entry?.[FIELD_AUDIENCE]?.[SDP_AUDIENCE]?.['sdp_audience'];
+        setAudience(audience);
+      }    
+    }
+
+    console.log("🚀 Entry Audience:", audience);
+    return audience;
+  }
 
   const initializeApp = useCallback(async () => {
     
@@ -73,40 +117,27 @@ function App() {
       // Set the branch.
       const branch = app?.stack?.getCurrentBranch()?.uid ?? 'main';
       setBranch(branch);
+      const appendToUrl = `?origin=gcp-na-app.contentstack.com&branch=${branch}`;
 
       // Set the entry uid.
-      if (entry?._data?.uid) {
-        setEntryUid(entry?._data?.uid);
-      }
+      setEntryUidAndLog(entry)
 
-      const appendToUrl = `?origin=gcp-na-app.contentstack.com&branch=${branch}`;
-      if (entry?._data?.url) {
-        console.log("🚀 Setting the value of the URL field to: ", entry._data.url + appendToUrl)
-        customField?.entry.getField("url")?.setData(entry._data.url + appendToUrl)
-      } else {
-        console.log("🚀 URL is not defined. Cannot set as part of initializeApp.")
-      }
+      // Set the audience.
+      setAudienceAndLog(entry, "appLoaded")
+
+      // Set initial URL value.
+      setUrlAndLog(entry, appendToUrl, null)
       
       // When loading entry, if audience field is set, set the...
-      if (entry?._data?.[FIELD_AUDIENCE]) {
-        if (customField?.entry?.getData?.()?.url !== '') {
-          const clearUrl = getClearUrl(customField?.entry?.getData?.()?.url);
-          customField?.entry.getField("url", { useUnsavedSchema: true })?.setData(clearUrl + appendToUrl);
-        }
-      }
+      let url = setUrlAndLog(entry?._data, entry, appendToUrl)
+      customField?.entry.getField("url", { useUnsavedSchema: true })?.setData(url + appendToUrl);
       
       // Set the URL field anytime the audience field changes.
       entry?.onChange((data: any) => {
-        console.log("🚀Entry changed, uid is: ", entry?._data?.uid)
-        if (entry?._data?.uid) {
-          const url = constructUrl(data, entry?._data?.uid);
-          if (url !== '') {
-            setUrl(url)
-            entry.getField(FIELD_URL)?.setData(url + appendToUrl)
-          } else {
-            console.log("🚀Entry changed, but URL is empty. Can not set value of URL field when empty.")
-          }
-        }
+        console.log("🚀 Entry changed, UID is:", entry?._data?.uid)
+        setAudienceAndLog(entry, "entryChanged")
+        let url = setUrlAndLog(entry, appendToUrl, data)
+        entry.getField(FIELD_URL)?.setData(url + appendToUrl)
       });
 
       entry?.onSave(async () => {
@@ -128,7 +159,7 @@ function App() {
     } else {
       console.log('Custom field not yet loaded...')
     }
-  }, [app, isSaved, entryUid])
+  }, [app])
 
 
   useEffect(() => {
@@ -154,7 +185,9 @@ function App() {
     ? 'Select value for "Audience" field to view KMS link.'
     : 'Select value for "Audience" field and then save entry to view KMS link.'
   
-  const return_value = (url)
+  console.log("Return URL:", url)
+  console.log("Return Audience:", audience)
+  const return_value = (url && audience)
     ? <>
         <base href={getHrefUrl(branchName)} />
         <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
