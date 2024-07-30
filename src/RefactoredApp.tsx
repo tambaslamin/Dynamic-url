@@ -151,7 +151,30 @@ function App() {
         };
         setIsSaved(false);
         try {
+          console.log("Payload for save event", payload)
+
+          // Use Management API to update entry.
+          const content_type_uid = 'sdp_knowledge_article';
+          const apiUrl = `https://gcp-na-api.contentstack.com/v3/content_types/${content_type_uid}/entries/${entryUid}`;
+           
+          const options = {
+          method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'api_key': 'blt3dda152013686c94',
+              'authorization': 'csfca0250d69f3beebd60fbcd8',
+            }, 
+            body: JSON.stringify(payload)
+          };
+           
+          fetch(apiUrl, options)
+            .then(response => response.json())
+            .then(data =>console.log(data))
+            .catch(error =>console.error('Error:', error));
+           
+          // Update the entry.
           await app.stack.ContentType(entryCustomField?.content_type?.uid).Entry(newEntry.uid).update(payload);
+          
         } catch (err) {
           console.log("🚀 ~ entry?.onSave ~ err:", err)
         }
