@@ -132,9 +132,10 @@ function App() {
       
       // Ignore the templates (used when cloning content)
       const templateUids : string[] = [
-        'blt47ebfd8a8712fa6e',
-        'blt3ca83e4debc76229',
-        'blt9f44d7431e5446de',
+        'blt47ebfd8a8712fa6e', // [Template-Make a Copy] Techstop TSHC/CEKB Information Template
+        'blt3ca83e4debc76229', // [Template-Make a Copy] Techstop CEKB Troubleshooting and Procedure Template
+        'blt9f44d7431e5446de', // [Template-Make a Copy] Techstop TSHC Troubleshooting and Procedure Template
+        'bltbc1c203878259066', // [Template-Make a Copy] Techstop Guided Workflow Template
         'blt3699fdfe4d673892' // sandbox template (testing purposes only)
       ]
 
