@@ -51,6 +51,7 @@ function App() {
   const [entryUid, setEntryUid] = useState('');
   const [branchName, setBranch] = useState('');
   const [audience, setAudience] = useState('');
+  const [startingFromATemplate, setStartingFromATemplate] = useState(false)
 
   const setEntryUidAndLog = (entry: any) => {
     setEntryUid(entry?._data?.uid);
@@ -106,6 +107,7 @@ function App() {
     const customField = await app?.location?.CustomField;
 
     if (customField) {
+
       customField?.frame?.updateHeight();
       customField?.frame?.enableAutoResizing();
 
@@ -128,9 +130,22 @@ function App() {
       // Set initial URL value.
       setUrlAndLog(entry, appendToUrl, null)
       
-      // When loading entry, if audience field is set, set the...
-      let url = setUrlAndLog(entry?._data, entry, appendToUrl)
-      customField?.entry.getField("url", { useUnsavedSchema: true })?.setData(url + appendToUrl);
+      // Ignore the templates (used when cloning content)
+      const templateUids : string[] = [
+        'blt47ebfd8a8712fa6e',
+        'blt3ca83e4debc76229',
+        'blt9f44d7431e5446de',
+        'blt3699fdfe4d673892' // sandbox template (testing purposes only)
+      ]
+
+      if (!templateUids.includes(entry?._data?.uid)) {
+        // Entry is not a template, set the URL field on form load.
+        let url = setUrlAndLog(entry?._data, entry, appendToUrl)
+        customField?.entry.getField("url", { useUnsavedSchema: true })?.setData(url + appendToUrl);
+      } else {
+        setStartingFromATemplate(true);
+        console.log("This is a template. Will not populate the URL field.", entry?._data?.uid);
+      }
       
       // Set the URL field anytime the audience field changes.
       entry?.onChange((data: any) => {
@@ -141,42 +156,22 @@ function App() {
       });
 
       entry?.onSave(async () => {
-        const cleanUrl = getClearUrl(customField?.entry?.getData()?.url);
-        const entryCustomField = customField?.entry;
-        entryCustomField.getField("url")?.setData(cleanUrl);
-        const newEntry = entryCustomField.getData();
-        newEntry.url = cleanUrl;
-        const payload = {
-          entry: newEntry
-        };
-        setIsSaved(false);
-        try {
-          console.log("Payload for save event", payload)
-
-          // Use Management API to update entry.
-          const content_type_uid = 'sdp_knowledge_article';
-          const apiUrl = `https://gcp-na-api.contentstack.com/v3/content_types/${content_type_uid}/entries/${entryUid}`;
-           
-          const options = {
-          method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'api_key': 'blt3dda152013686c94',
-              'authorization': 'csfca0250d69f3beebd60fbcd8',
-            }, 
-            body: JSON.stringify(payload)
+        if (!startingFromATemplate) {
+          // Do not set URL field if starting from a template on the first save.
+          const cleanUrl = getClearUrl(customField?.entry?.getData()?.url);
+          const entryCustomField = customField?.entry;
+          entryCustomField.getField("url")?.setData(cleanUrl);
+          const newEntry = entryCustomField.getData();
+          newEntry.url = cleanUrl;
+          const payload = {
+            entry: newEntry
           };
-           
-          fetch(apiUrl, options)
-            .then(response => response.json())
-            .then(data =>console.log(data))
-            .catch(error =>console.error('Error:', error));
-           
-          // Update the entry.
-          await app.stack.ContentType(entryCustomField?.content_type?.uid).Entry(newEntry.uid).update(payload);
-          
-        } catch (err) {
-          console.log("🚀 ~ entry?.onSave ~ err:", err)
+          setIsSaved(false);
+          try {
+            await app.stack.ContentType(entryCustomField?.content_type?.uid).Entry(newEntry.uid).update(payload);
+          } catch (err) {
+            console.log("🚀 ~ entry?.onSave ~ err:", err)
+          }
         }
       })
     } else {
@@ -204,9 +199,13 @@ function App() {
     initializeApp()
   }, [initializeApp])
   
-  const kms_url_not_available_message = (entryUid)
+  let kms_url_not_available_message = (entryUid)
     ? 'Select value for "Audience" field to view KMS link.'
     : 'Select value for "Audience" field and then save entry to view KMS link.'
+
+  if (startingFromATemplate) {
+    kms_url_not_available_message = 'Starting from a template: save changes to the entry first.'
+  }
   
   console.log("Return URL:", url)
   console.log("Return Audience:", audience)
