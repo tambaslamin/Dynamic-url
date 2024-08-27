@@ -24,8 +24,6 @@ const getHrefUrl = (branch: string) => {
   }
 }
 
-const getClearUrl = (url: string) => url.replace(/\?.*$/, "");
-
 const constructUrl = (data: any, id: any) => {
   const category = data?.[FIELD_AUDIENCE]?.[SDP_AUDIENCE]
  
@@ -46,7 +44,6 @@ const constructUrl = (data: any, id: any) => {
 function App() {
   const [error, setError] = useState<any>(null);
   const [app, setApp] = useState({} as any);
-  const [isSaved, setIsSaved] = useState(true);
   const [url, setUrl] = useState('');
   const [entryUid, setEntryUid] = useState('');
   const [branchName, setBranch] = useState('');
@@ -58,7 +55,7 @@ function App() {
     console.log("🚀 Entry UID:", entry?._data?.uid);
   }
 
-  const setUrlAndLog = (entry: any, appendToUrl: string, changeData: any | null) => {
+  const setUrlAndLog = (entry: any, changeData: any | null) => {
     let url = ''
     if (changeData !== null) {
       // Entry changed.
@@ -119,7 +116,6 @@ function App() {
       // Set the branch.
       const branch = app?.stack?.getCurrentBranch()?.uid ?? 'main';
       setBranch(branch);
-      const appendToUrl = `?origin=gcp-na-app.contentstack.com&branch=${branch}`;
 
       // Set the entry uid.
       setEntryUidAndLog(entry)
@@ -128,7 +124,7 @@ function App() {
       setAudienceAndLog(entry, "appLoaded")
 
       // Set initial URL value.
-      setUrlAndLog(entry, appendToUrl, null)
+      setUrlAndLog(entry, null)
       
       // Ignore the templates (used when cloning content)
       const templateUids : string[] = [
@@ -141,8 +137,8 @@ function App() {
 
       if (!templateUids.includes(entry?._data?.uid)) {
         // Entry is not a template, set the URL field on form load.
-        let url = setUrlAndLog(entry?._data, entry, appendToUrl)
-        customField?.entry.getField("url", { useUnsavedSchema: true })?.setData(url + appendToUrl);
+        let url = setUrlAndLog(entry?._data, entry)
+        customField?.entry.getField("url", { useUnsavedSchema: true })?.setData(url);
       } else {
         setStartingFromATemplate(true);
         console.log("This is a template. Will not populate the URL field.", entry?._data?.uid);
@@ -152,29 +148,10 @@ function App() {
       entry?.onChange((data: any) => {
         console.log("🚀 Entry changed, UID is:", entry?._data?.uid)
         setAudienceAndLog(entry, "entryChanged")
-        let url = setUrlAndLog(entry, appendToUrl, data)
-        entry.getField(FIELD_URL)?.setData(url + appendToUrl)
+        let url = setUrlAndLog(entry, data)
+        entry.getField(FIELD_URL)?.setData(url)
       });
 
-      entry?.onSave(async () => {
-        if (!startingFromATemplate) {
-          // Do not set URL field if starting from a template on the first save.
-          const cleanUrl = getClearUrl(customField?.entry?.getData()?.url);
-          const entryCustomField = customField?.entry;
-          entryCustomField.getField("url")?.setData(cleanUrl);
-          const newEntry = entryCustomField.getData();
-          newEntry.url = cleanUrl;
-          const payload = {
-            entry: newEntry
-          };
-          setIsSaved(false);
-          try {
-            await app.stack.ContentType(entryCustomField?.content_type?.uid).Entry(newEntry.uid).update(payload);
-          } catch (err) {
-            console.log("🚀 ~ entry?.onSave ~ err:", err)
-          }
-        }
-      })
     } else {
       console.log('Custom field not yet loaded...')
     }
