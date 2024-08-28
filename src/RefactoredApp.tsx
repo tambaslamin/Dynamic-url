@@ -24,19 +24,15 @@ const getHrefUrl = (branch: string) => {
   }
 }
 
-const constructUrl = (data: any, id: any) => {
-  const category = data?.[FIELD_AUDIENCE]?.[SDP_AUDIENCE]
- 
+const constructUrl = (entry: any, id: string) => {
+  const category = entry?.[FIELD_AUDIENCE]?.[SDP_AUDIENCE]
   // Default URL.
-  let formattedUrl = `/article/${id ?? 'entry_id'}`
-
+  let formattedUrl = `/${id ?? 'entry_id'}`
   if (category === 'Googlers') {
     formattedUrl = `/techstop/article/${id ?? 'entry_id'}`
   } else if (category === 'Resolvers') {
     formattedUrl = `/corpengkb/article/${id ?? 'entry_id'}`
   }
-
-  console.log("🚀 Constructed the URL:", formattedUrl)
   return formattedUrl;
 }
 
@@ -50,49 +46,6 @@ function App() {
   const [audience, setAudience] = useState('');
   const [startingFromATemplate, setStartingFromATemplate] = useState(false)
 
-  const setEntryUidAndLog = (entry: any) => {
-    setEntryUid(entry?._data?.uid);
-    console.log("🚀 Entry UID:", entry?._data?.uid);
-  }
-
-  const setUrlAndLog = (entry: any, changeData: any | null) => {
-    let url = ''
-    if (changeData !== null) {
-      // Entry changed.
-      console.log("🚀 setUrlAndLog - entry changed");
-      url = constructUrl(changeData, entry?._data?.uid);
-      setUrl(url)
-    } else {
-      // Entry not changed.
-      console.log("🚀 setUrlAndLog - entry NOT changed");
-      url = constructUrl(entry, entry?._data?.uid);
-      setUrl(url)
-    }
-
-    if (url !== '') {
-      console.log("🚀 Proposed entry URL:", url);
-    }
-    return url;
-  }
-
-  const setAudienceAndLog = (entry: any, eventType: string) => {
-    let audience = null;
-    if (eventType === "entryChanged") {
-      if (entry?._changedData?.[FIELD_AUDIENCE] && entry?._changedData?.[FIELD_AUDIENCE]?.['sdp_audience'] !== undefined) {
-        audience = entry?._changedData?.[FIELD_AUDIENCE]?.['sdp_audience'];
-        setAudience(audience);
-      }
-    } 
-    else {
-      if (entry?._data?.[FIELD_AUDIENCE] && entry?._data?.[FIELD_AUDIENCE]?.['sdp_audience'] !== undefined) {
-        audience = entry?.[FIELD_AUDIENCE]?.[SDP_AUDIENCE]?.['sdp_audience'];
-        setAudience(audience);
-      }    
-    }
-
-    console.log("🚀 Entry Audience:", audience);
-    return audience;
-  }
 
   const initializeApp = useCallback(async () => {
     
@@ -109,7 +62,10 @@ function App() {
       customField?.frame?.enableAutoResizing();
 
       const entry = customField?.entry;
-      if (entry?._data?.url !== 'undefined') {
+      console.log(entry)
+
+      // Entry URL field is already defined.
+      if (entry?._data?.url !== 'undefined' && entry?._data?.url !== "") {
         console.log("🚀 Entry URL:", entry?._data?.url);
       }
 
@@ -117,15 +73,17 @@ function App() {
       const branch = app?.stack?.getCurrentBranch()?.uid ?? 'main';
       setBranch(branch);
 
-      // Set the entry uid.
-      setEntryUidAndLog(entry)
+      // Store the entry uid in state: entryUid (str)
+      setEntryUid(entry?._data?.uid);
 
-      // Set the audience.
-      setAudienceAndLog(entry, "appLoaded")
+      // If audience is defined, set URL field.
+      let audience = null;
+      if (entry?._data?.[FIELD_AUDIENCE] && entry?._data?.[FIELD_AUDIENCE]?.['sdp_audience'] !== undefined) {
+        // Get audience from entry.
+        audience = entry?.[FIELD_AUDIENCE]?.[SDP_AUDIENCE]?.['sdp_audience'];
+        setAudience(audience);
+      }
 
-      // Set initial URL value.
-      setUrlAndLog(entry, null)
-      
       // Ignore the templates (used when cloning content)
       const templateUids : string[] = [
         'blt47ebfd8a8712fa6e', // [Template-Make a Copy] Techstop TSHC/CEKB Information Template
@@ -137,8 +95,10 @@ function App() {
 
       if (!templateUids.includes(entry?._data?.uid)) {
         // Entry is not a template, set the URL field on form load.
-        let url = setUrlAndLog(entry?._data, entry)
-        customField?.entry.getField("url", { useUnsavedSchema: true })?.setData(url);
+        let url = constructUrl(entry?._data, entry?._data?.uid);
+        setUrl(url);
+        entry.getField(FIELD_URL)?.setData(url);
+        // customField?.entry.getField("url", { useUnsavedSchema: true })?.setData(url);
       } else {
         setStartingFromATemplate(true);
         console.log("This is a template. Will not populate the URL field.", entry?._data?.uid);
@@ -146,10 +106,22 @@ function App() {
       
       // Set the URL field anytime the audience field changes.
       entry?.onChange((data: any) => {
-        console.log("🚀 Entry changed, UID is:", entry?._data?.uid)
-        setAudienceAndLog(entry, "entryChanged")
-        let url = setUrlAndLog(entry, data)
-        entry.getField(FIELD_URL)?.setData(url)
+        if (!startingFromATemplate) {
+          if (entry?._changedData?.[FIELD_AUDIENCE] && entry?._changedData?.[FIELD_AUDIENCE]?.['sdp_audience'] !== undefined) {
+            audience = entry?._changedData?.[FIELD_AUDIENCE]?.['sdp_audience'];
+            setAudience(audience);
+          }
+          
+          // Determine the proper URL.
+          let url = constructUrl(data, entry?._data?.uid);
+          setUrl(url)
+
+          // If calculated URL does not match URL field on entry form, then update...
+          if (url !== entry?._changedData?.url) {
+            console.log("Update URL field to:", url, "from", entry?._changedData?.url);
+            entry.getField(FIELD_URL)?.setData(url);
+          }
+        }
       });
 
     } else {
@@ -185,8 +157,6 @@ function App() {
     kms_url_not_available_message = 'Starting from a template: save changes to the entry first.'
   }
   
-  console.log("Return URL:", url)
-  console.log("Return Audience:", audience)
   const return_value = (url && audience)
     ? <>
         <base href={getHrefUrl(branchName)} />
