@@ -27,7 +27,7 @@ const getHrefUrl = (branch: string) => {
 const constructUrl = (entry: any, id: string) => {
   const category = entry?.[FIELD_AUDIENCE]?.[SDP_AUDIENCE]
   // Default URL.
-  let formattedUrl = `/${id ?? 'entry_id'}`
+  let formattedUrl = "";
   if (category === 'Googlers') {
     formattedUrl = `/techstop/article/${id ?? 'entry_id'}`
   } else if (category === 'Resolvers') {
@@ -60,12 +60,10 @@ function App() {
 
       customField?.frame?.updateHeight();
       customField?.frame?.enableAutoResizing();
-
       const entry = customField?.entry;
-      console.log(entry)
 
       // Entry URL field is already defined.
-      if (entry?._data?.url !== 'undefined' && entry?._data?.url !== "") {
+      if (entry?._data?.url !== undefined && entry?._data?.url !== "") {
         console.log("🚀 Entry URL:", entry?._data?.url);
       }
 
@@ -76,8 +74,10 @@ function App() {
       // Store the entry uid in state: entryUid (str)
       setEntryUid(entry?._data?.uid);
 
-      // If audience is defined, set URL field.
+      let url = "";
       let audience = null;
+
+      // Get the audience.
       if (entry?._data?.[FIELD_AUDIENCE] && entry?._data?.[FIELD_AUDIENCE]?.['sdp_audience'] !== undefined) {
         // Get audience from entry.
         audience = entry?.[FIELD_AUDIENCE]?.[SDP_AUDIENCE]?.['sdp_audience'];
@@ -95,10 +95,12 @@ function App() {
 
       if (!templateUids.includes(entry?._data?.uid)) {
         // Entry is not a template, set the URL field on form load.
-        let url = constructUrl(entry?._data, entry?._data?.uid);
+        url = constructUrl(entry?._data, entry?._data?.uid);
         setUrl(url);
-        entry.getField(FIELD_URL)?.setData(url);
-        // customField?.entry.getField("url", { useUnsavedSchema: true })?.setData(url);
+
+        if (entry?._data?.url !== url && entry?._data?.uid !== "") {
+          customField?.entry.getField("url", { useUnsavedSchema: true })?.setData(url);
+        }
       } else {
         setStartingFromATemplate(true);
         console.log("This is a template. Will not populate the URL field.", entry?._data?.uid);
@@ -117,15 +119,14 @@ function App() {
           setUrl(url)
 
           // If calculated URL does not match URL field on entry form, then update...
-          if (url !== entry?._changedData?.url) {
-            console.log("Update URL field to:", url, "from", entry?._changedData?.url);
-            entry.getField(FIELD_URL)?.setData(url);
+          if (url !== entry?._changedData?.url && entry?._data?.uid !== "") {
+            customField?.entry.getField("url", { useUnsavedSchema: true })?.setData(url);
           }
         }
       });
 
     } else {
-      console.log('Custom field not yet loaded...')
+      console.log("🚀 Waiting for the KMS URL custom field.")
     }
   }, [app])
 
