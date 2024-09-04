@@ -157,6 +157,8 @@ let kms_url_not_available_message ='';
   */
   if (!entryUid) {
     kms_url_not_available_message = 'Select value for "Audience" field and then save entry to view KMS link.'
+  } else {
+    kms_url_not_available_message = setUrl(url);
   }
 
   if (startingFromATemplate) {
