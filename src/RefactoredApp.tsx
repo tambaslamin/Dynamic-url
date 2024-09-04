@@ -155,17 +155,12 @@ function App() {
   ? 'Select value for "Audience" field to view KMS link.'
   : 'Select value for "Audience" field and then save entry to view KMS link.'*/
   
-  if (!entryUid) {
-    kms_url_not_available_message = 'Select value for "Audience" field and then save entry to view KMS link.'
-  } else {
-    kms_url_not_available_message = url;
-  }
+  kms_url_not_available_message = 'Select value for "Audience" field and then save entry to view KMS link.'
 
   if (startingFromATemplate) {
     kms_url_not_available_message = 'Starting from a template: save changes to the entry first.'
   }
-  
-  const return_value = (url && audience)
+  const return_value = (url && url.contains("/article"))
     ? <>
         <base href={getHrefUrl(branchName)} />
         <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
