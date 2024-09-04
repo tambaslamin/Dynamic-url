@@ -160,7 +160,7 @@ function App() {
   if (startingFromATemplate) {
     kms_url_not_available_message = 'Starting from a template: save changes to the entry first.'
   }
-  const return_value = (url && url.contains("/article"))
+  const return_value = (url && url.includes("/article"))
     ? <>
         <base href={getHrefUrl(branchName)} />
         <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
