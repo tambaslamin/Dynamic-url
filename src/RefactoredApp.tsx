@@ -151,7 +151,7 @@ function App() {
   }, [initializeApp])
   
   let kms_url_not_available_message = (entryUid)
-    ? '{url}'
+    ? {url}
     : 'Select value for "Audience" field and then save entry to view KMS link.'
 
   if (startingFromATemplate) {
