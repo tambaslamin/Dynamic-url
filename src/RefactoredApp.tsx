@@ -150,9 +150,14 @@ function App() {
     initializeApp()
   }, [initializeApp])
   
-  let kms_url_not_available_message = (entryUid)
+let kms_url_not_available_message ='';
+  /*let kms_url_not_available_message = (entryUid)
     ? {url}
     : 'Select value for "Audience" field and then save entry to view KMS link.'
+  */
+  if (!entryUid) {
+    kms_url_not_available_message = 'Select value for "Audience" field and then save entry to view KMS link.'
+  }
 
   if (startingFromATemplate) {
     kms_url_not_available_message = 'Starting from a template: save changes to the entry first.'
