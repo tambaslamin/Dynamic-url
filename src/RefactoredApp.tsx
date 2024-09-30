@@ -19,7 +19,7 @@ const getHrefUrl = (branch: string) => {
       return 'https://supportcenter.corp.google.com'
     }
     default: {
-      return 'https://supportcenter-staging.corp.google.com'
+      return 'https://supportcenter-autopush.corp.google.com'
     }
   }
 }
