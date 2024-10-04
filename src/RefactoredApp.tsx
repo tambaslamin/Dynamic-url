@@ -91,6 +91,7 @@ function App() {
         'blt9f44d7431e5446de', // [Template-Make a Copy] Techstop TSHC Troubleshooting and Procedure Template
         'bltbc1c203878259066', // [Template-Make a Copy] Techstop Guided Workflow Template
         'blt3699fdfe4d673892' // sandbox template (testing purposes only)
+        'bltafdf1bfec3d95667' // [Template-Make a Copy] sample Troubleshooter Template for gintegration
       ]
 
       if (!templateUids.includes(entry?._data?.uid)) {
